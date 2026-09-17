@@ -39,6 +39,12 @@
 #define CK_MOD_RSHIFT  0x20
 #define CK_MOD_RALT    0x40
 #define CK_MOD_RGUI    0x80
+/*
+ * R3 PTT. Default is Right Control (real HID, WeType can bind it).
+ * Set CK_VOICE_USE_FN to 1 later to emit Consumer Keyboard Fn 0x029D instead.
+ */
+#define CK_VOICE_USE_FN  0
+#define CK_VOICE_MOD     CK_MOD_RCTRL
 
 #define CK_KEY_A       0x04
 #define CK_KEY_C       0x06
@@ -71,7 +77,7 @@ typedef struct {
     int8_t  wheel;     /* vertical */
     int8_t  pan;       /* horizontal; USB hook may map to shift+wheel */
     uint8_t consumer;  /* bit0 VolUp bit1 VolDn bit2 Mute bit3 Fn */
-    uint8_t voice_held; /* R3: hold Apple/Globe Fn for WeType PTT */
+    uint8_t voice_held; /* R3 PTT: Right Control unless CK_VOICE_USE_FN */
 } ck_hid_t;
 
 void ck_init(void);

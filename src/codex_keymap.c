@@ -250,7 +250,10 @@ static void apply_hold_or_repeat(uint8_t act, uint32_t now, uint32_t t0, uint32_
     }
 
     if (act == CK_ACT_VOICE_HOLD) {
-        hid.consumer |= CK_CONSUMER_FN;
+        if (CK_VOICE_USE_FN)
+            hid.consumer |= CK_CONSUMER_FN;
+        else
+            hid.mods |= CK_VOICE_MOD;
         hid.voice_held = 1;
         voice_held = 1;
         return;
