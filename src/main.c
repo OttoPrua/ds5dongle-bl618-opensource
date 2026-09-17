@@ -16,6 +16,8 @@
 #include "config.h"
 #include "dse.h"
 #include "remap.h"
+#include "codex_keymap.h"
+#include "codex_usb.h"
 
 #include "bl616_glb.h"
 #include "btble_lib_api.h"
@@ -1061,19 +1063,18 @@ static void usb_task(void *arg)
     uint64_t ps_key_rel_us   = 0;
     uint64_t ps_key_sched_us = 0;
 
-    /* Remap profile switch: Create + D-pad Left/Right */
+    bool     ck_was_connected = false;
+
+#if 0 /* unused while Codex keymap owns input */
     bool     remap_combo_fired = false;
-
-    /* Touchpad mode cycle: Create + Touchpad Press */
     bool     tp_mode_combo_fired = false;
-
-    /* Volume combo: Options + D-pad Up/Down → Consumer Control Volume */
     bool     vol_key_active = false;
     uint64_t vol_repeat_us  = 0;
     #define VOL_REPEAT_FIRST_MS  400
     #define VOL_REPEAT_NEXT_MS   120
-    #define CC_VOL_UP    0x01   /* bitmap bit0 = Volume Increment */
-    #define CC_VOL_DOWN  0x02   /* bitmap bit1 = Volume Decrement */
+    #define CC_VOL_UP    0x01
+    #define CC_VOL_DOWN  0x02
+#endif
 
     for (;;) {
         /* Periodic USB status check (every ~10 seconds) */
@@ -1117,6 +1118,16 @@ static void usb_task(void *arg)
                 LOG_DBG("[USB-FWD] %lu reports forwarded\n",
                        (unsigned long)usb_fwd_count);
 
+            /* Codex keymap: skip Options+dpad volume, Create+dpad profile,
+             * Create+touchpad mode, upstream remap kbd/mouse, and PS Win+G. */
+            ck_was_connected = true;
+            ck_tick(raw_report + 2,
+                    (uint32_t)(bflb_mtimer_get_time_us() / 1000ULL));
+            ck_usb_poll();
+            usb_gamepad_send_raw_input(raw_report + 2);
+            usb_wake_on_bt_input(raw_report + 2, DS5_USB_INPUT_PAYLOAD_LEN);
+
+#if 0 /* upstream remap / volume / profile — disabled in Codex keymap mode */
             /* Volume combo: Options(≡) + D-pad Up/Down → Consumer Control Vol.
              * Detect BEFORE remap so we can suppress both buttons from gamepad. */
             {
@@ -1216,6 +1227,7 @@ static void usb_task(void *arg)
             remap_apply(raw_report + 2);
             usb_gamepad_send_raw_input(raw_report + 2);
             usb_wake_on_bt_input(raw_report + 2, DS5_USB_INPUT_PAYLOAD_LEN);
+#endif /* Codex keymap: upstream input remap disabled */
 
             /* Headset plug detection for audio tag switching (0x93 vs 0x96) */
             audio_set_headset((raw_report[2 + DS5_HEADSET_BYTE] & 1) != 0);
@@ -1304,7 +1316,7 @@ static void usb_task(void *arg)
                      * Long press removed — conflicts with controller disconnect.
                      * 50ms debounce, 30ms key hold before release.
                      */
-                    if (config_ps_shortcut()) {
+                    if (0 && config_ps_shortcut()) {
                         bool raw_ps = (raw_report[2 + DS5_BTN_PS_BYTE] &
                                        DS5_BTN_PS_BIT) != 0;
 
@@ -1341,6 +1353,10 @@ static void usb_task(void *arg)
             ps_debounced = false;
             ps_key_scheduled = false;
             ps_was_pressed = false;
+            if (ck_was_connected) {
+                ck_usb_release_all();
+                ck_was_connected = false;
+            }
             if (ps_key_pending) {
                 if (usb_gamepad_kbd_ready()) {
                     uint8_t up[8] = {0};

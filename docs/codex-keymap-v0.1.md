@@ -4,6 +4,8 @@ Firmware-internal DualSense layer for Mac / Codex. Does not replace the BT/USB/a
 
 Identity string: `codex-keymap-v0.1` (`CK_MAP_VERSION`). Do **not** report this as upstream 3.19/3.20/3.21.
 
+USB hook is on this branch: extra HID keyboard/mouse is always present, upstream remap / Options+dpad volume / Create+dpad profile / Create+touchpad / PS Win+G are disabled. DualSense gamepad + audio stay. Identity: `LCT616-DS5 3.18H+codex-keymap-v0.1` (do not confuse with board 3.20aH).
+
 ## Host tests (no board, no SDK)
 
 ```bash

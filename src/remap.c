@@ -442,7 +442,7 @@ void remap_on_disconnect(void)
 
     /* Reset mouse state */
     if (last_mouse_buttons && usb_gamepad_kbd_ready())
-        usb_gamepad_send_mouse_report(0, 0, 0, 0);
+        usb_gamepad_send_mouse_report(0, 0, 0, 0, 0);
     tp_mouse_last_x = -1;
     tp_mouse_last_y = -1;
     tp_click_held = false;
@@ -563,7 +563,7 @@ void remap_mouse_tick(const uint8_t *p)
 
     if (dx != 0 || dy != 0 || buttons != last_mouse_buttons) {
         if (usb_gamepad_kbd_ready())
-            usb_gamepad_send_mouse_report(buttons, dx, dy, 0);
+            usb_gamepad_send_mouse_report(buttons, dx, dy, 0, 0);
         last_mouse_buttons = buttons;
     }
 }
@@ -587,6 +587,6 @@ void remap_tp_cycle_mode(void)
     tp_click_held = false;
     tp_right_triggered = false;
     if (last_mouse_buttons && usb_gamepad_kbd_ready())
-        usb_gamepad_send_mouse_report(0, 0, 0, 0);
+        usb_gamepad_send_mouse_report(0, 0, 0, 0, 0);
     last_mouse_buttons = 0;
 }

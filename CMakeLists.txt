@@ -26,6 +26,8 @@ target_sources(app PRIVATE
     src/config.c
     src/dse.c
     src/remap.c
+    src/codex_keymap.c
+    src/codex_usb.c
 )
 
 sdk_add_include_directories(src)

@@ -23,9 +23,9 @@
 
 #if defined(BOARD_LCTECH_616)
   #ifdef FORCE_FS_MODE
-    #define FIRMWARE_VERSION "LCT616-DS5 3.18"
+    #define FIRMWARE_VERSION "LCT616-DS5 3.18+codex-keymap-v0.1"
   #else
-    #define FIRMWARE_VERSION "LCT616-DS5 3.18H"
+    #define FIRMWARE_VERSION "LCT616-DS5 3.18H+codex-keymap-v0.1"
   #endif
 #elif defined(BOARD_M0S_DOCK)
 #define FIRMWARE_VERSION "M0S-DS5 3.5"
@@ -43,7 +43,7 @@
 #define USB_HID_CONFIG_SIZE (9 + USB_AUDIO_DESC_SIZE + USB_HID_ONLY_SIZE)
 #define HID_REPORT_DESC_SIZE_DS  329
 #define HID_REPORT_DESC_SIZE_DSE 445
-#define KBD_REPORT_DESC_SIZE 141  /* Keyboard + Consumer (incl. Fn) + Mouse */
+#define KBD_REPORT_DESC_SIZE 150  /* Keyboard + Consumer (incl. Fn) + Mouse + pan */
 
 static bool current_dse_mode = false;
 
@@ -392,6 +392,10 @@ static const uint8_t kbd_report_desc[KBD_REPORT_DESC_SIZE] = {
     0x09, 0x38,       /*   Usage (Wheel) */
     0x95, 0x01,       /*   Report Count (1) */
     0x81, 0x06,       /*   Input (Data,Var,Rel) — Wheel */
+    0x05, 0x0C,       /*   Usage Page (Consumer) */
+    0x0A, 0x38, 0x02, /*   Usage (AC Pan) */
+    0x95, 0x01,       /*   Report Count (1) */
+    0x81, 0x06,       /*   Input (Data,Var,Rel) — Pan */
     0xC0,             /*   End Collection (Physical) */
     0xC0,             /* End Collection (Application) */
 };
@@ -806,9 +810,7 @@ int usb_gamepad_init(usb_gamepad_output_cb_t output_cb)
      * enable_wake now uses USB remote-wake signal only (F15 key removed) —
      * no keyboard interface needed. remap KBD type is disabled for now.
      * REMOTE-WAKEUP bit stays in bmAttributes when wake is enabled. */
-    const bool need_kbd = remap_has_kbd_targets() ||
-                          config_get()->ps_shortcut_enabled ||
-                          (config_get()->tp_mode == 2 || config_get()->tp_mode == 3);
+    const bool need_kbd = true; /* Codex keymap always needs kbd+mouse HID */
     const bool need_remote_wake = config_get()->enable_wake || need_kbd;
     if (need_kbd) {
         config_desc[KBD_SUBCLASS_OFF] = 0x00; /* No subclass (multi-TLC, not pure boot) */
@@ -1007,7 +1009,8 @@ int usb_gamepad_send_consumer_report(uint16_t bits)
     return ret;
 }
 
-int usb_gamepad_send_mouse_report(uint8_t buttons, int8_t dx, int8_t dy, int8_t wheel)
+int usb_gamepad_send_mouse_report(uint8_t buttons, int8_t dx, int8_t dy,
+                                  int8_t wheel, int8_t pan)
 {
     if (!usb_configured || !kbd_registered || kbd_ep_busy)
         return -1;
@@ -1016,9 +1019,10 @@ int usb_gamepad_send_mouse_report(uint8_t buttons, int8_t dx, int8_t dy, int8_t 
     kbd_buf[2] = (uint8_t)dx;
     kbd_buf[3] = (uint8_t)dy;
     kbd_buf[4] = (uint8_t)wheel;
+    kbd_buf[5] = (uint8_t)pan;
     kbd_ep_busy = true;
     kbd_ep_busy_since_us = bflb_mtimer_get_time_us();
-    int ret = usbd_ep_start_write(0, USB_KBD_EP_IN, kbd_buf, 5);
+    int ret = usbd_ep_start_write(0, USB_KBD_EP_IN, kbd_buf, 6);
     if (ret < 0)
         kbd_ep_busy = false;
     return ret;
