@@ -236,7 +236,7 @@ static void apply_hold_or_repeat(uint8_t act, uint32_t now, uint32_t t0, uint32_
     uint8_t key = 0, mods = 0;
     uint32_t period = CK_REPEAT_PERIOD_MS;
     switch (act) {
-    case CK_ACT_VOICE_HOLD: mods = CK_MOD_RCTRL; break;
+    case CK_ACT_VOICE_HOLD: break;
     case CK_ACT_BKSP_REPEAT: key = CK_KEY_BKSP; break;
     case CK_ACT_ARROW_LEFT_REPEAT: key = CK_KEY_LEFT; break;
     case CK_ACT_ARROW_RIGHT_REPEAT: key = CK_KEY_RIGHT; break;
@@ -250,7 +250,7 @@ static void apply_hold_or_repeat(uint8_t act, uint32_t now, uint32_t t0, uint32_
     }
 
     if (act == CK_ACT_VOICE_HOLD) {
-        hid.mods |= mods;
+        hid.consumer |= CK_CONSUMER_FN;
         hid.voice_held = 1;
         voice_held = 1;
         return;

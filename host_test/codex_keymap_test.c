@@ -179,10 +179,10 @@ int main(void)
     zero_payload(p);
     set_sh(p, 0, 0, 0, 0, 0, 0, 0, 1);
     ck_tick(p, t += 8);
-    if (!ck_hid()->voice_held || !(ck_hid()->mods & CK_MOD_RCTRL))
-        fail("R3 voice hold");
+    if (!ck_hid()->voice_held || !(ck_hid()->consumer & CK_CONSUMER_FN) || (ck_hid()->mods & CK_MOD_RCTRL))
+        fail("R3 voice hold should be Fn, not Right Control");
     else
-        pass("R3 voice hold");
+        pass("R3 voice hold Fn");
     set_sh(p, 0, 1, 0, 0, 0, 0, 0, 1);
     ck_tick(p, t += 8);
     if (has_key(ck_hid(), CK_KEY_ESC))

@@ -59,6 +59,9 @@
 #define CK_MOUSE_LEFT  0x01
 #define CK_MOUSE_RIGHT 0x02
 
+/* Consumer report ID 2 bit3 = Keyboard Fn (HID 0x0C / 0x029D). */
+#define CK_CONSUMER_FN 0x08
+
 typedef struct {
     uint8_t mods;
     uint8_t keys[6];
@@ -67,7 +70,8 @@ typedef struct {
     int8_t  dy;
     int8_t  wheel;     /* vertical */
     int8_t  pan;       /* horizontal; USB hook may map to shift+wheel */
-    uint8_t voice_held;
+    uint8_t consumer;  /* bit0 VolUp bit1 VolDn bit2 Mute bit3 Fn */
+    uint8_t voice_held; /* R3: hold Apple/Globe Fn for WeType PTT */
 } ck_hid_t;
 
 void ck_init(void);

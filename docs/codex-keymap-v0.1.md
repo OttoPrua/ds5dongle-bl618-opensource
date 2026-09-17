@@ -32,8 +32,12 @@ Input is a DualSense USB 63-byte payload sequence. Output is the expected HID ke
 | Next needing attention | ⌘⌥A | documented, not live-tested |
 | App switch / next window | ⌘Tab / ⌘` | standard Mac |
 | Spaces / Mission Control | ⌃← ⌃→ / ⌃↑ / ⌃↓ | standard Mac |
-| WeType voice | Right Control hold | placeholder; Fn cannot be sent over USB HID. Confirm the shortcut you used in WeType. |
+| WeType voice | Consumer Keyboard Fn (0x029D) hold on R3 | WeType stays on Fn. Do not spoof Apple VID. |
 | Stop run / re-edit / focus composer / L3 recall | none | no confirmed native shortcut yet |
+
+R3 holds Consumer **Keyboard Fn** (`0x0C` / `0x029D`). WeType stays on Fn. Standard boot-keyboard HID has no Fn usage.
+
+Do **not** spoof Apple VID `05AC`. Apple vendor page Fn (`0xFF01` / `0x03`) is ignored on third-party VID in current macOS. `0x029D` is the path that still reports as Fn without pretending to be an Apple keyboard. Hardware must confirm WeType sees it as keycode 63 after the USB hook.
 
 ## Do not flash this tree over 3.20aH
 

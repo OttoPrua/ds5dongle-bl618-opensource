@@ -43,7 +43,7 @@
 #define USB_HID_CONFIG_SIZE (9 + USB_AUDIO_DESC_SIZE + USB_HID_ONLY_SIZE)
 #define HID_REPORT_DESC_SIZE_DS  329
 #define HID_REPORT_DESC_SIZE_DSE 445
-#define KBD_REPORT_DESC_SIZE 138  /* Keyboard + Consumer + Mouse */
+#define KBD_REPORT_DESC_SIZE 141  /* Keyboard + Consumer (incl. Fn) + Mouse */
 
 static bool current_dse_mode = false;
 
@@ -352,13 +352,14 @@ static const uint8_t kbd_report_desc[KBD_REPORT_DESC_SIZE] = {
     0x15, 0x00,       /*   Logical Minimum (0) */
     0x25, 0x01,       /*   Logical Maximum (1) */
     0x75, 0x01,       /*   Report Size (1) */
-    0x95, 0x03,       /*   Report Count (3) — 3 bits: VolUp, VolDn, Mute */
+    0x95, 0x04,       /*   Report Count (4) — VolUp, VolDn, Mute, Keyboard Fn */
     0x09, 0xE9,       /*   Usage (Volume Increment) — bit 0 */
     0x09, 0xEA,       /*   Usage (Volume Decrement) — bit 1 */
     0x09, 0xE2,       /*   Usage (Mute)             — bit 2 */
+    0x0A, 0x9D, 0x02, /*   Usage (Keyboard Fn 0x029D) — bit 3; WeType PTT */
     0x81, 0x02,       /*   Input (Data,Var,Abs) */
     0x95, 0x01,       /*   Report Count (1) */
-    0x75, 0x05,       /*   Report Size (5) — padding */
+    0x75, 0x04,       /*   Report Size (4) — padding */
     0x81, 0x01,       /*   Input (Const) */
     0xC0,             /* End Collection */
 
@@ -997,7 +998,7 @@ int usb_gamepad_send_consumer_report(uint16_t bits)
     if (!usb_configured || !kbd_registered || kbd_ep_busy)
         return -1;
     kbd_buf[0] = 0x02; /* Report ID 2 = Consumer Control */
-    kbd_buf[1] = bits & 0xFF; /* bit0=VolUp, bit1=VolDn, bit2=Mute */
+    kbd_buf[1] = bits & 0xFF; /* bit0=VolUp, bit1=VolDn, bit2=Mute, bit3=Fn */
     kbd_ep_busy = true;
     kbd_ep_busy_since_us = bflb_mtimer_get_time_us();
     int ret = usbd_ep_start_write(0, USB_KBD_EP_IN, kbd_buf, 2);
